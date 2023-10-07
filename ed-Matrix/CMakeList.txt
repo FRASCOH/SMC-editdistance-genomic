@@ -1,0 +1,2 @@
+add_executable(ed_Matrix_test ed_Matrix_test.cpp common/ed_Matrix.cpp)
+target_link_libraries(ed_Matrix _testABY::aby ENCRYPTO_utils::encrypto_utils)
