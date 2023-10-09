@@ -35,7 +35,6 @@ int snake(vector<int> sequence, int lengthAlice, int lengthBob, int intBitSize, 
             i++; 
             j++;
      	}
-     	    	
      }  
     return j;
 }
