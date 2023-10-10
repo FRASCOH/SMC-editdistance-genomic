@@ -4,7 +4,7 @@
 //ABY Party class
 #include "../../abycore/aby/abyparty.h"
 
-#include "common/millionaire_prob.h"
+#include "common/ed_Matrix.h"
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 		uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, std::string* address,
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 	seclvl seclvl = get_sec_lvl(secparam);
 
 	//evaluate the edit distance Matrix circuit using Yao
-	ed_matrix_circuit(role, address, port, seclvl, 32,
+	test_ed_matrix_circuit(role, address, port, seclvl, 32,
 			nthreads, mt_alg, S_YAO);
 	//evaluate the edit distance Matrix circuit using GMW
 	//ed_matrix_circuit(role, address, port, seclvl, 32,
