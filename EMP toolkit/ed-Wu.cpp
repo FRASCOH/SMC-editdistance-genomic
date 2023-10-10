@@ -17,9 +17,6 @@ int snake(vector<int> sequence, int lengthAlice, int lengthBob, int intBitSize, 
 
     vector<Integer> sequenceAlice;
     vector<Integer> sequenceBob;
-    int nrow = lengthBob;
-    int ncol = lengthAlice;
-    vector<vector<Integer>> matrix(nrow+1, vector<Integer> (ncol+1));
     Integer ok(intBitSize, 1, ALICE);
     Integer notok(intBitSize, 0, ALICE);
     int x;
