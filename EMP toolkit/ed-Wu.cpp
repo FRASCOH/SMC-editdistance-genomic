@@ -13,12 +13,14 @@ Integer max(Integer a, Integer b) {
 }
 
 int snake(vector<int> sequence, int lengthAlice, int lengthBob, int intBitSize, int k, int j) {
-    int i = j - k;
+    Integer i_(intBitSize, j - k, ALICE);
+    //int i = j - k;
+    Integer j_(intBitSize, j, ALICE);
 
     vector<Integer> sequenceAlice;
     vector<Integer> sequenceBob;
-    Integer ok(intBitSize, 1, ALICE);
-    Integer notok(intBitSize, 0, ALICE);
+    Integer one(intBitSize, 1, ALICE);
+    Integer zero(intBitSize, 0, ALICE);
     int x;
 
     for (x = 0; x < lengthAlice; x++)
@@ -27,11 +29,9 @@ int snake(vector<int> sequence, int lengthAlice, int lengthBob, int intBitSize, 
         sequenceBob.push_back(Integer (intBitSize, sequence[x], BOB));
 
     while(i < lengthAlice && j < lengthBob ){
-    Integer result = ok.select((sequenceAlice[i] == sequenceBob[j]), notok);
-    	if(result.reveal<int>() == 1){
-            i++; 
-            j++;
-     	}
+         Integer iplus = i_ + one;
+         Integer jplus = j_ + one; 
+         iplus.select((sequenceAlice[i] == sequenceBob[j]), jplus);
      }  
     return j;
 }
