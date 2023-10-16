@@ -1,3 +1,8 @@
+from sequre.attributes import sequre_beaver as sequre
+from sequre.stdlib.internal import Internal as sq, SharedTensor as Stensor
+from sequre.stdlib.builtin import abs
+
+
 def map_nucleotide_to_integer(nucleotide):
     if nucleotide == 'A':
         return 0
@@ -36,55 +41,6 @@ def levenshtein_distance(s, t):
 
     return d[m][n]
 
-string1 = "ACTG"
-string2 = "ACGG"
-
-int_vector1 = transform_to_int_vector(string1)
-int_vector2 = transform_to_int_vector(string2)
-
-return l_dist = levenshtein_distance(int_vector1, int_vector2)
-
-
-
-
-  from sequre.attributes import sequre_beaver as sequre
-from sequre.stdlib.internal import Internal as sq, SharedTensor as Stensor
-
-
-@sequre
-def mult3(mpc, a, b, c):
-    """
-    Hastings et al. mult3 benchmark expanded to series of additions and multiplications.
-    """
-    return a * b + b * c + a * c
-
-
-@sequre
-def innerprod(mpc, a, b):
-    """
-    Hastings et al. innerprod benchmark.
-    """
-    return sq.dot(mpc, a, b)
-
-
-@sequre
-def xtabs(mpc, a, b, c, d):
-    """
-    Hastings et al. xtabs benchmark.
-    """
-    
-    d.get_partitions(mpc)
-    cats = Stensor.range(1, 6, a.modulus)
-    val = Stensor.zeros(5, a.modulus)
-    broadcasted_b = b.broadcast(5).T
-
-    for i in range(10):
-        same_bin = cats == broadcasted_b[i]
-        for j in range(10):
-            val += (same_bin * (a[i] == c[j]) * d[j])
-
-    return val
-
 
 @sequre
 def playground(mpc, a, b, c, d, e, f, g, h):
@@ -103,8 +59,7 @@ def playground(mpc, a, b, c, d, e, f, g, h):
         g = SharedTensor(mpc.comms.share(int_t(13), modulus), modulus)
         h = SharedTensor(mpc.comms.share(int_t(19), modulus), modulus)
     """
-    mult3(mpc, f, g, h)
-    innerprod(mpc, e, e)
-    xtabs(mpc, a, b, c, d)
+    
+    levenshtein_distance(mpc, a, b)
 
     return a  # Playground is temporarily expected to return SharedTensor of list of int_t
