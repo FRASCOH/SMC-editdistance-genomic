@@ -36,14 +36,18 @@ int edit_distance_wu(vector<int> sequence, int lengthAlice, int lengthBob, int i
     vector<Integer> row2 (lengthBob+1);
     Integer zero(intBitSize, 0, ALICE);
     Integer one(intBitSize, 1, ALICE);
+    Integer one_neg(intBitSize, -1, ALICE);
     int x, k;
     int p = -1;
     int delta = lengthBob - lengthAlice;
     int offset = lengthAlice + 1;
-    vector<int> fp (lengthAlice + lengthBob + 3);
-    fill(&fp[0], &fp[lengthAlice + lengthBob + 3], -1);
-    int* ptr_fp = &fp[0];
+    vector<Integer> fp (lengthAlice + lengthBob + 3);
+    fill(&fp[0], &fp[lengthAlice + lengthBob + 3], one_neg);
+    Integer* ptr_fp = &fp[0];
 
+    //Integer delta_emp(intBitSize, delta, ALICE);
+    Integer p(intBitSize, -1, ALICE);
+    
     for (x = 0; x < lengthAlice; x++)
         sequenceAlice.push_back(Integer (intBitSize, sequence[x], ALICE));
 
@@ -51,7 +55,7 @@ int edit_distance_wu(vector<int> sequence, int lengthAlice, int lengthBob, int i
         sequenceBob.push_back(Integer (intBitSize, sequence[x], BOB));
 
      do {
-        p++;
+        p = p + one;
         for (k = -p; k <= delta-1; k++) {
             *(ptr_fp + k + offset) = snake(sequenceAlice, sequenceBob, lengthAlice, lengthBob, intBitSize, k, max( *(ptr_fp + k - 1 + offset) + 1, *(ptr_fp + k + 1 + offset));
         }
@@ -61,7 +65,7 @@ int edit_distance_wu(vector<int> sequence, int lengthAlice, int lengthBob, int i
         *(ptr_fp + delta + offset) = snake(sequenceAlice, sequenceBob, lengthAlice, lengthBob, intBitSize, delta, max( *(ptr_fp + delta - 1 + offset) + 1, *(ptr_fp + delta + 1 + offset)));
     } while (*(ptr_fp + delta + offset) != lengthBob);
     
-    return (delta + 2*p);
+    return (delta + 2 * p).reveal<int>();
     
 }
 
