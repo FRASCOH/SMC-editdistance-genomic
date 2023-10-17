@@ -12,30 +12,22 @@ Integer max(Integer a, Integer b) {
     return b.select((a > b), a);
 }
 
-int snake(vector<int> sequence, int lengthAlice, int lengthBob, int intBitSize, int k, int j) {
-    Integer i_(intBitSize, j - k, ALICE);
-    //int i = j - k;
-    Integer j_(intBitSize, j, ALICE);
 
-    vector<Integer> sequenceAlice;
-    vector<Integer> sequenceBob;
+int snake( vector<int> sequenceAlice, vector<int> sequenceBob, int s1len, int s2len, int k, int j) {
+    Integer i_emp(intBitSize, j - k, ALICE);
+    Integer j_emp(intBitSize, j, ALICE);
     Integer one(intBitSize, 1, ALICE);
     Integer zero(intBitSize, 0, ALICE);
-    int x;
+    
+    if (j >= s2len || k >= s1len) {
+        return j;
+    }
+    
+    Integer result = j_emp.select((sequenceAlice[k] != sequenceBob[j]), zero);
+    if(result.reveal<int>() != 0) return j;
 
-    for (x = 0; x < lengthAlice; x++)
-        sequenceAlice.push_back(Integer (intBitSize, sequence[x], ALICE));
-    for (x = 0; x < lengthBob; x++)
-        sequenceBob.push_back(Integer (intBitSize, sequence[x], BOB));
-
-    while(i < lengthAlice && j < lengthBob ){
-         Integer iplus = i_ + one;
-         Integer jplus = j_ + one; 
-         iplus.select((sequenceAlice[i] == sequenceBob[j]), jplus);
-     }  
-    return j;
+    return snake(s1, s2, s1len, s2len, k + 1, j + 1);
 }
-
 
 int edit_distance_wu(vector<int> sequence, int lengthAlice, int lengthBob, int intBitSize) {
     vector<Integer> sequenceAlice;
@@ -61,12 +53,12 @@ int edit_distance_wu(vector<int> sequence, int lengthAlice, int lengthBob, int i
      do {
         p++;
         for (k = -p; k <= delta-1; k++) {
-            *(ptr_fp + k + offset) = snake(sequence, lengthAlice, lengthBob, intBitSize, k, max( *(ptr_fp + k - 1 + offset) + 1, *(ptr_fp + k + 1 + offset));
+            *(ptr_fp + k + offset) = snake(sequenceAlice, sequenceBob, lengthAlice, lengthBob, intBitSize, k, max( *(ptr_fp + k - 1 + offset) + 1, *(ptr_fp + k + 1 + offset));
         }
         for (k = delta+p; k >= delta+1; k--) {
-            *(ptr_fp + k + offset) = snake(sequence, lengthAlice, lengthBob, intBitSize, k, max( *(ptr_fp + k - 1 + offset) + 1, *(ptr_fp + k + 1 + offset)));
+            *(ptr_fp + k + offset) = snake(sequenceAlice, sequenceBob, lengthAlice, lengthBob, intBitSize, k, max( *(ptr_fp + k - 1 + offset) + 1, *(ptr_fp + k + 1 + offset)));
         }
-        *(ptr_fp + delta + offset) = snake(sequence, lengthAlice, lengthBob, intBitSize, delta, max( *(ptr_fp + delta - 1 + offset) + 1, *(ptr_fp + delta + 1 + offset)));
+        *(ptr_fp + delta + offset) = snake(sequenceAlice, sequenceBob, lengthAlice, lengthBob, intBitSize, delta, max( *(ptr_fp + delta - 1 + offset) + 1, *(ptr_fp + delta + 1 + offset)));
     } while (*(ptr_fp + delta + offset) != lengthBob);
     
     return (delta + 2*p);
