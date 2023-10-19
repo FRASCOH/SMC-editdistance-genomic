@@ -1,0 +1,47 @@
+from sequre.attributes import sequre
+from sequre.types.shared_tensor import SharedTensor as Stensor
+
+
+@sequre
+def min(mpc, x, y):
+    mask = ((y - x) > 0).astype(int)
+    return x * mask - y * (mask - 1)
+
+
+@sequre
+def levenshtein_distance(mpc, s, t, modulus):
+    m = len(s)
+    n = len(t)
+    d = Stensor.zeros(m + 1, n + 1, modulus)
+
+    for i in range(1, m + 1):
+        # Add instead of set. There is no support for public setter yet
+        d[i, 0] = d[i, 0] + i
+
+    for j in range(1, n + 1):
+        # Add instead of set. There is no support for public setter yet
+        d[0, j] = d[0, j] + j
+
+    for j in range(1, n + 1):
+        for i in range(1, m + 1):
+            # Avoiding branching for now.
+            # In case s and t are needed to be SharedTensors as well later, remove the int() cast
+            cost = int(s[i - 1] != t[j - 1])
+            d[i, j] = min(
+                mpc,
+                min(mpc, d[i - 1, j] + 1, d[i, j - 1] + 1),
+                d[i - 1, j - 1] + cost)
+
+    return d[m, n]
+
+
+@sequre
+def playground(mpc, a, b, c, d, e, f, g, h):
+   
+    # Seq/Sequre's native genomic types
+    seq_1 = s'ACGTACGG'
+    seq_2 = s'ACACGGTA'
+   
+    print("Levenshtein score: ", levenshtein_distance(mpc, seq_1, seq_2, a.modulus).reveal(mpc))
+
+    return a
