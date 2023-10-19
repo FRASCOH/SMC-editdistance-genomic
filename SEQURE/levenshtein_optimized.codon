@@ -11,7 +11,42 @@ def min(mpc, x, y):
 
 @sequre
 def levenshtein_optimized_distance(mpc, s, t, modulus):
-    
+    m = len(s)
+    n = len(t)
+    row1 = Stensor.zeros(m + 1, modulus)
+    row2 = Stensor.zeros(n + 1, modulus)
+
+    row[0] = 0
+    for j in range(1, n + 1):
+        row1[x] = x
+
+    for i in range(1, m + 1):
+        row2[0] = i
+        for j in range(1, n + 1):
+
+    row1[0] = zero;
+    for (x = 1; x <= lengthBob; x++)
+        row1[x] = Integer(intBitSize, x, ALICE);
+
+    for (y = 1; y <= lengthAlice; y++){
+        row2[0] = Integer(intBitSize, x, ALICE);
+        for (x = 1; x <= lengthBob; x++)
+            row2[x] = minimum(row1[x] + one, row2[x-1] + one, row1[x-1] + one.select((sequenceAlice[y-1] == sequenceBob[x-1]), zero));
+        row1.swap(row2);
+    }
+------------------
+
+row1[0] = zero
+row2 = [0] * (lengthBob + 1)
+
+for x in range(1, lengthBob + 1):
+    row1[x] = x
+
+for y in range(1, lengthAlice + 1):
+    row2[0] = y
+    for x in range(1, lengthBob + 1):
+        row2[x] = min(row1[x] + one, row2[x - 1] + one, row1[x - 1] + one if sequenceAlice[y - 1] == sequenceBob[x - 1] else zero)
+    row1, row2 = row2, row1
 
 
 @sequre
