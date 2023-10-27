@@ -52,7 +52,7 @@ def generalized_threshold_distance(mpc, s, t, modulus):
             top = row[j];
             check = int(s[i - 1] != t[j - 1])
             if check:
-                dia = min(mpc, dia, top, left) + 1;
+                dia = min(mpc, min(mpc, dia, top), left) + 1;
             row[j] = dia
             left = dia
             dia = top
