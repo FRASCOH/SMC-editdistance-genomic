@@ -1,0 +1,81 @@
+from sequre.attributes import sequre_beaver as sequre
+from sequre.attributes import sequre
+from sequre.types.shared_tensor import SharedTensor as Stensor
+
+
+@sequre
+def min(mpc, x, y):
+    mask = (y - x) > 0
+    return x * mask - y * (mask - 1)
+
+@sequre
+def max(mpc, x, y):
+    mask = (y - x) > 0
+    return y * mask + x * (mask - 1)
+
+
+@sequre
+def generalized_threshold_distance(mpc, s, t, modulus):
+    m = len(s)
+    n = len(t)
+  
+    row = Stensor.zeros(n + 1, modulus)
+
+    gmax = (n - 1) / 2
+    gmin = 1 - gmax - (m - n)
+  
+
+    for j in range(0, gmax + 1):
+        row[j] = j
+
+    for i in range(1, m + 1):
+        row[0] = i - 1
+
+        min = max(mpc, gmin, 1)
+        max = min(mpc, gmax, m)
+
+        gmin += 1
+        gmax += 1
+
+        dia = row[min - 1]
+        top = row[min];
+
+        check = int(s[i - 1] != t[min - 1])
+        if check:
+            dia = min(mpc, dia, top) + 1
+
+        row[min] = dia
+        left = dia
+        dia = top
+
+        for j in range(min, max + 1):
+            top = row[j];
+            check = int(s[i - 1] != t[j - 1])
+            if check:
+                dia = min(mpc, dia, top, left) + 1;
+            row[j] = dia
+            left = dia
+            dia = top
+
+        if m == max:
+            continue
+
+        check = int(s[i - 1] != t[max])
+        if check:
+            dia = min(mpc, dia, left) + 1;
+        row[max + 1] = dia;
+
+   dia = row[m];
+   return dia
+
+
+@sequre
+def playground(mpc, a, b, c, d, e, f, g, h):
+   
+    # Seq/Sequre's native genomic types
+    seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
+    seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
+
+    print("Distanza di modifica: ", levenshtein_optimized_distance(mpc, seq_1, seq_2, a.modulus).print(mpc))
+
+    return a
