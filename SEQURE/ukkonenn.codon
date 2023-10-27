@@ -1,0 +1,70 @@
+from sequre.attributes import sequre_beaver as sequre
+from sequre.attributes import sequre
+from sequre.types.shared_tensor import SharedTensor as Stensor
+
+
+@sequre
+def min(mpc, x, y):
+    mask = (y - x) > 0
+    return x * mask - y * (mask - 1)
+
+@sequre
+def max(mpc, x, y):
+    mask = (y - x) > 0
+    return y * mask + x * (mask - 1)
+
+
+@sequre
+def generalized_threshold_distance(mpc, s, t, modulus, threshold):
+    m = len(s)
+    n = len(t)
+
+    if threshold == -1
+        threshold = INT_MAX
+  
+    p = Stensor.zeros(m + 1, modulus)
+    d = Stensor.zeros(m + 1, modulus)
+    for i in range(0, m+1):
+        d[i] = INT_MAX
+
+    boundary = min(m, threshold) + 1
+    for i in range(0, boundary):
+        p[i] = i
+
+    for i in range(m + 1):
+        p[i] = INT_MAX
+
+    for row in range(1, n+1):
+        d[0] = row
+
+        min = max(1, row - threshold)
+        max = min(m, row + threshold)
+
+        if min > max:
+            return -1
+
+        if min > 1
+            d[min-1] = INT_MAX
+
+  //
+
+
+@sequre
+def playground(mpc, a, b, c, d, e, f, g, h):
+   
+    # Seq/Sequre's native genomic types
+    seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
+    seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
+    if len(sys.argv) != 2:
+        print("Usage: ./ukkonenn.codon <threshold>")
+        sys.exit(1)
+
+    try:
+        threshold = int(sys.argv[1])
+    except ValueError:
+        print("Threshold must be an integer")
+        sys.exit(1)
+
+    print("Distanza di modifica: ", levenshtein_optimized_distance(mpc, seq_1, seq_2, a.modulus, threshold).print(mpc))
+
+    return a
