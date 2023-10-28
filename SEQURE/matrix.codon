@@ -40,8 +40,8 @@ def levenshtein_distance(mpc, s, t, modulus):
 def playground(mpc, a, b, c, d, e, f, g, h):
    
     # Seq/Sequre's native genomic types
-    seq_1 = s'ACGTACGG'
-    seq_2 = s'ACACGGTA'
+    seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
+    seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
 
     print("Distanza di modifica: ", levenshtein_distance(mpc, seq_1, seq_2, a.modulus).print(mpc))
 
