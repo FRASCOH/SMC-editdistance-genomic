@@ -17,18 +17,18 @@ def levenshtein_optimized_distance(mpc, s, t, modulus):
     row2 = Stensor.zeros(n + 1, modulus)
 
     for j in range(1, n + 1):
-        row1[x] = x
+        row1[j] = row1[j] + j
 
     for i in range(1, m + 1):
-        row2[0] = x
+        row2[0] = row2[0] + j
         for j in range(1, n + 1):
             cost = int(s[i - 1] != t[j - 1])
             d[i, j] = min(
                 mpc,
-                min(mpc, row1[x] + 1, row2[x - 1] + 1),
-                row1[x - 1] + cost)
-
-    return d[m, n]
+                min(mpc, row1[j] + 1, row2[j - 1] + 1),
+                row1[j - 1] + cost)
+            row1, row2 = (row2, row1)
+    return row1[n]
 
 
 @sequre
