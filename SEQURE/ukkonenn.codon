@@ -25,17 +25,17 @@ def generalized_threshold_distance(mpc, s, t, modulus, threshold):
     p = Stensor.zeros(m + 1, modulus)
     d = Stensor.zeros(m + 1, modulus)
     for i in range(0, m+1):
-        d[i] = INT_MAX
+        d[i] = d[i] + INT_MAX
 
     boundary = min(m, threshold) + 1
     for i in range(0, boundary):
-        p[i] = i
+        p[i] = p[i] + i
 
     for i in range(m + 1):
-        p[i] = INT_MAX
+        p[i] = p[i] + INT_MAX
 
     for row in range(1, n+1):
-        d[0] = row
+        d[0] = d[0] + row
 
         min = max(mpc, 1, row - threshold)
         max = min(mpc, m, row + threshold)
@@ -44,17 +44,18 @@ def generalized_threshold_distance(mpc, s, t, modulus, threshold):
             return -1
 
         if min > 1
-            d[min-1] = INT_MAX
+            d[min-1] = d[min-1] + INT_MAX
 
         for col in range(min, max + 1):
             if s[row - 1] == t[col - 1]:
-                d[col] = p[col - 1]
+                ap = p[col - 1]
+                d[col] = d[col] + ap
             else
                 d[col] = min(mpc, min(mpc, p[col - 1], d[col - 1]), p[col]) + 1
         p.swap(d)
 
         if p[n] <= threshold
-            p[m]
+            return p[m]
         else
             return -1
 
