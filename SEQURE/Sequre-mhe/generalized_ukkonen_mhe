@@ -1,0 +1,118 @@
+from numpy.create import arange, zeros
+
+from sequre.attributes import sequre
+from sequre.types.sharetensor import Sharetensor as Stensor
+
+
+@sequre
+def minimum(mpc, x, y):
+    mask = ((y - x) > 0).astype(int)
+    return x * mask - y * (mask - 1)
+
+#Cut-off
+@sequre  #Il decoratore Sequre abilita ottimizzazioni in fase di compilazione come la riduzione della profondità
+         #di moltiplicazione e la riorganizzazione delle espressioni per minimizzare il costo della rete
+def wagner_fischer_cut_off(mpc, s, t, buf):  #Ogni funzione decorata con @sequre deve avere mpc come primo attributo. 
+                                        #mpc è un'istanza della classe MPC che memorizza la configurazione della rete(numero di partiti,ecc.), 
+                                        #flussi pseudo-casuali per migliorare le prestazioni e un insieme di aritmetiche essenziali per MPC
+    
+    #Presumendo che s e t siano pubblici e buf sia privato (condiviso in segreto)
+    n = len(s)  # Valore pubblico
+    m = len(t)  # Valore pubblico
+
+    for i in range(1, n + 1):  #Itera sull'intervallo pubblico
+        tmp = buf[0]  #Sharetensor tmp memorizza il valore condiviso in segreto di buf[0]
+        #buf[0] = i  #Impostare un valore pubblico su Stensor privato non è possibile, si utilizza il trucco sotto:
+        buf[0] = buf[0] * 0 + i  #Trucco (fino a quando il supporto per l'impostazione di valori pubblici non viene aggiunto). 
+                                 #Questo calcolerà il valore sharetensor (buf[0] * 0) e ci aggiungerà i pubblicamente
+
+        for j in range(1, m + 1):  # Itera sull'intervallo pubblico
+            if s[i - 1] == t[j - 1]:  # Verifica l'uguaglianza tra due valori pubblici
+                tmp, buf[j] = buf[j], tmp  # Scambia
+            else:
+                val = minimum(mpc, buf[j], minimum(mpc, buf[j - 1], tmp)) + 1  # Calcola il minimo su sharetensor privati
+                tmp, buf[j] = buf[j], val  # Scambia
+
+    return buf[m]  # Restituisce l'm-esimo valore privato in sharetensor buf
+
+
+
+#Generalized Threshold
+@sequre
+def edit_distance_generalized_threshold(mpc, s1, s2, row):
+    s1len = len(s1)
+    s2len = len(s2)
+    gmax = (s2len - 1) // 2
+    gmin = 1 - gmax - (s1len - s2len)
+
+    for j in range(gmax + 1):
+        row[j] += j
+
+    for i in range(1, s1len + 1):
+        row[0] = row[0] * 0 + (i - 1)
+
+        gmin += 1
+        gmax += 1
+        min_val = max(gmin, 1)
+        max_val = min(gmax, s2len)
+        dia = row[min_val - 1]
+        top = row[min_val]
+
+        if s1[i - 1] != s2[min_val - 1]:
+            dia = minimum(mpc, dia, top) + 1
+
+        row[min_val] = dia
+        left = dia
+        dia = top
+
+        for j in range(min_val + 1, max_val + 1):
+            top = row[j]
+
+            if s1[i - 1] != s2[j - 1]:
+                dia = minimum(mpc, dia, minimum(mpc, top, left)) + 1
+
+            row[j] = dia
+            left = dia
+            dia = top
+
+        if s2len == max_val:
+            continue
+
+        if s1[i - 1] != s2[max_val]:
+            dia = minimum(mpc, dia, left) + 1
+
+        row[max_val + 1] = dia
+
+    dia = row[s2len]
+    return dia
+
+
+@sequre
+def playground(mpc, a, b, c, d, e, f, g, h):
+   
+    # Tipi genetici nativi di Seq/Sequre
+    seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
+    seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
+    
+    n = len(seq_1)
+    m = len(seq_2)
+
+    buf_public = arange(len(seq_2) + 1, dtype=int)  # Public buffer
+    buf_stensor = Stensor.enc(mpc, buf_public, source_pid=0, modulus=a.modulus)  # Secret-shares the buf at CP0 to other parties
+
+    #Wagner Fisher con cut-off
+    wf_public = wagner_fischer_cut_off(mpc, seq_1, seq_2, buf_public)  # Esecuzione offline/stile Python del metodo wagner_fischer_cut_off
+    wf_stensor = wagner_fischer_cut_off(mpc, seq_1, seq_2, buf_stensor)  # Esecuzione sicura del metodo wagner_fischer_cut_off
+
+    row_public = zeros(len(seq_2) + 1, dtype=int)
+    row_stensor = Stensor.enc(mpc, row_public, source_pid=0, modulus=a.modulus)
+
+    gu_public = edit_distance_generalized_threshold(mpc, seq_1, seq_2, row_public)
+    gu_stensor = wagner_fischer_cut_off(mpc, seq_1, seq_2, row_stensor)
+
+    if mpc.pid:  # I risultati in CP0 sono spesso zero, quindi non c'è bisogno di controllarli qui. Tuttavia, è necessario assicurarsi che CP0 sia incluso nei calcoli sopra (quindi se il ramo mpc.pid è impostato solo qui)
+        print("Distanza di modifica (Generalizzata pubblica): ", gu_public)
+        print("Distanza di modifica (Generalizzata sicura): ", gu_stensor.reveal(mpc))
+
+    return a
+
