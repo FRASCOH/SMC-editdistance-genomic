@@ -10,11 +10,8 @@ def minimum(mpc, x, y):
     return x * mask - y * (mask - 1)
 
 #Cut-off
-@sequre  #Il decoratore Sequre abilita ottimizzazioni in fase di compilazione come la riduzione della profondità
-         #di moltiplicazione e la riorganizzazione delle espressioni per minimizzare il costo della rete
-def wagner_fischer_cut_off(mpc, s, t, buf):  #Ogni funzione decorata con @sequre deve avere mpc come primo attributo. 
-                                        #mpc è un'istanza della classe MPC che memorizza la configurazione della rete(numero di partiti,ecc.), 
-                                        #flussi pseudo-casuali per migliorare le prestazioni e un insieme di aritmetiche essenziali per MPC
+@sequre  #Il decoratore Sequre abilita ottimizzazioni in fase di compilazione come la riduzione della profondità di moltiplicazione e la riorganizzazione delle espressioni per minimizzare il costo della rete
+def wagner_fischer_cut_off(mpc, s, t, buf):  #Ogni funzione decorata con @sequre deve avere mpc come primo attributo. mpc è un'istanza della classe MPC che memorizza la configurazione della rete(numero di partiti,ecc.), flussi pseudo-casuali per migliorare le prestazioni e un insieme di aritmetiche essenziali per MPC
     
     #Presumendo che s e t siano pubblici e buf sia privato (condiviso in segreto)
     n = len(s)  # Valore pubblico
@@ -23,8 +20,7 @@ def wagner_fischer_cut_off(mpc, s, t, buf):  #Ogni funzione decorata con @sequre
     for i in range(1, n + 1):  #Itera sull'intervallo pubblico
         tmp = buf[0]  #Sharetensor tmp memorizza il valore condiviso in segreto di buf[0]
         #buf[0] = i  #Impostare un valore pubblico su Stensor privato non è possibile, si utilizza il trucco sotto:
-        buf[0] = buf[0] * 0 + i  #Trucco (fino a quando il supporto per l'impostazione di valori pubblici non viene aggiunto). 
-                                 #Questo calcolerà il valore sharetensor (buf[0] * 0) e ci aggiungerà i pubblicamente
+        buf[0] = buf[0] * 0 + i  #Trucco (fino a quando il supporto per l'impostazione di valori pubblici non viene aggiunto). Questo calcolerà il valore sharetensor (buf[0] * 0) e ci aggiungerà i pubblicamente
 
         for j in range(1, m + 1):  # Itera sull'intervallo pubblico
             if s[i - 1] == t[j - 1]:  # Verifica l'uguaglianza tra due valori pubblici
