@@ -1,0 +1,80 @@
+from numpy.create import arange, zeros
+
+from sequre.attributes import sequre
+from sequre.types.sharetensor import Sharetensor as Stensor
+from sequre.types.multiparty_union import MPU
+
+@sequre
+def minimum(mpc, x, y):
+    mask = ((y - x) > 0).astype(int)
+    return x * mask - y * (mask - 1)
+
+@sequre
+def edit_distance_generalized_threshold(mpc, s1, s2, row): # Based on whether row is public or stensor this method will run in either offline/python-like or Sequre
+    s1len = len(s1)
+    s2len = len(s2)
+    gmax = (s2len - 1) // 2
+    gmin = 1 - gmax - (s1len - s2len)
+
+    for j in range(gmax + 1):
+        row[j] = row[j] + j  # Sequre public setter is not possible yet. This is a bypass.
+
+    for i in range(1, s1len + 1):
+        row[0] = row[0] * 0 + (i - 1)  # Sequre public setter is not possible yet. This is a bypass.
+
+        # Regular python code below
+        gmin += 1
+        gmax += 1
+        min_val = max(gmin, 1)
+        max_val = min(gmax, s2len)
+        
+        # Sequre code for indexing below
+        dia = row[min_val - 1]
+        top = row[min_val]
+
+        if s1[i - 1] != s2[min_val - 1]:
+            dia = minimum(mpc, dia, top) + 1  # Sequre minimum computing and Sequre public addition
+
+        row[min_val] = dia  # It is ok to use Sequre setter between two Stensors
+        left = dia
+        dia = top
+
+        for j in range(min_val + 1, max_val + 1):
+            top = row[j]
+
+            if s1[i - 1] != s2[j - 1]:
+                dia = minimum(mpc, dia, minimum(mpc, top, left)) + 1
+
+            row[j] = dia
+            left = dia
+            dia = top
+
+        if s2len == max_val:
+            continue
+
+        if s1[i - 1] != s2[max_val]:
+            dia = minimum(mpc, dia, left) + 1
+
+        row[max_val + 1] = dia
+
+    dia = row[s2len]
+    return dia
+
+@sequre
+def playground(mpc, a, b, c, d, e, f, g, h):
+   
+    # Seq/Sequre's native genomic types
+    seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
+    seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
+
+    # Generalized Ukkonen
+    row_public = zeros(len(seq_2) + 1, dtype=int)
+    row_stenor = Stensor.enc(mpc, row_public, source_pid=0, modulus=a.modulus)
+    gu_public = edit_distance_generalized_threshold(mpc, seq_1, seq_2, row_public)
+    gu_stensor = edit_distance_generalized_threshold(mpc, seq_1, seq_2, row_stenor)
+
+    if mpc.pid:  # Results at CP0 are often zero so no need to check them here. However, we need to make sure that CP0 is inlcuded in computation above (thus if mpc.pid branch is set only here)
+        print("Distanza di modifica (Generalized public): ", gu_public)
+        print("Distanza di modifica (Generalized secure): ", gu_stensor.reveal(mpc))
+
+    return a
