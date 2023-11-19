@@ -1,0 +1,51 @@
+from numpy.create import arange, zeros
+
+from sequre.attributes import sequre
+from sequre.types.sharetensor import Sharetensor as Stensor
+from sequre.types.multiparty_union import MPU
+
+
+@sequre
+def minimum(mpc, x, y):
+    mask = ((y - x) > 0).astype(int)
+    return x * mask - y * (mask - 1)
+
+
+@sequre  
+def wagner_fischer_cutoff(mpc, s, t, buf):
+    n = len(s) 
+    m = len(t) 
+
+    for i in range(1, n + 1):
+        tmp = buf[0]  
+        # buf[0] = i 
+        buf[0] = buf[0] * 0 + i  # Hack 
+        for j in range(1, m + 1): 
+            if s[i - 1] == t[j - 1]:  
+                tmp, buf[j] = buf[j], tmp  #Swap
+            else:
+                val = minimum(mpc, buf[j], minimum(mpc, buf[j - 1], tmp)) + 1  
+                tmp, buf[j] = buf[j], val  #Swap
+
+    return buf[m] 
+
+
+@sequre
+def playground(mpc, a, b, c, d, e, f, g, h):
+   
+    # Seq/Sequre's native genomic types
+    seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
+    seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
+    
+    # Wagner-Fischer cut-off
+    buf_public = arange(len(seq_2) + 1, dtype=int) 
+    buf_stenor = Stensor.enc(mpc, buf_public, source_pid=0, modulus=a.modulus)  
+    wf_public = wagner_fischer_cutoff(mpc, seq_1, seq_2, buf_public) 
+    wf_stensor = wagner_fischer_cutoff(mpc, seq_1, seq_2, buf_stenor)  
+
+
+    if mpc.pid: 
+        print("Distanza di modifica (Wagner-Fischer public): ", wf_public)
+        print("Distanza di modifica (Wagner-Fischer secure): ", wf_stensor.reveal(mpc))
+
+    return a
