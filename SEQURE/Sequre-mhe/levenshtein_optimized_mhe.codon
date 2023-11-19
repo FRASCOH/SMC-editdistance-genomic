@@ -1,0 +1,56 @@
+from numpy.create import arange, zeros
+
+from sequre.attributes import sequre
+from sequre.types.sharetensor import Sharetensor as Stensor
+from sequre.types.multiparty_union import MPU
+
+
+@sequre
+def minimum(mpc, x, y):
+    mask = ((y - x) > 0).astype(int)
+    return x * mask - y * (mask - 1)
+
+
+@sequre
+def levenshtein_optimized(mpc, s1, s2, row1, row2): 
+    s1len = len(s1)
+    s2len = len(s2)
+
+    for x in range(s2len + 1):
+        row1[x] = row1[x] + x 
+
+    for y in range(1, s1len + 1):
+        row2[0] = row2[0] * 0 + y  # Hack
+        for x in range(1, s2len + 1):
+            row2[x] = minimum(
+                mpc,
+                row1[x] + 1,
+                minimum(
+                    mpc,
+                    row2[x - 1] + 1,
+                    row1[x - 1] + (0 if s1[y - 1] == s2[x - 1] else 1)
+                )
+            )
+        row1, row2 = row2, row1
+
+    return row1[s2len]
+
+@sequre
+def playground(mpc, a, b, c, d, e, f, g, h):
+   
+    # Seq/Sequre's native genomic types
+    seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
+    seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
+
+    row1_public = zeros(len(seq_2) + 1, dtype=int)
+    row1_stenor = Stensor.enc(mpc, row1_public, source_pid=0, modulus=a.modulus)
+    row2_public = zeros(len(seq_2) + 1, dtype=int)
+    row2_stenor = Stensor.enc(mpc, row2_public, source_pid=0, modulus=a.modulus)
+    ed_public = levenshtein_optimized(mpc, seq_1, seq_2, row1_public, row2_public)
+    ed_stensor = levenshtein_optimized(mpc, seq_1, seq_2, row1_stenor, row2_stenor)
+
+    if mpc.pid:
+        print("Distanza di modifica (Edit distance public): ", ed_public)
+        print("Distanza di modifica (Edit distance secure): ", ed_stensor.reveal(mpc))
+
+    return a
