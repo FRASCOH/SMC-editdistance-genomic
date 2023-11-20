@@ -3,6 +3,7 @@ from numpy.create import arange, zeros
 from sequre.attributes import sequre
 from sequre.types.sharetensor import Sharetensor as Stensor
 
+
 @sequre
 def minimum(mpc, x, y):
     mask = ((y - x) > 0).astype(int)
@@ -20,19 +21,25 @@ def damerau_levenshtein(mpc, s, t, buf):
     for j in range(1, n + 1):
         buf[0, j] = buf[0, j] * 0 + j
 
-
     for j in range(1, n + 1):
         for i in range(1, m + 1):
             cost = int(s[i-1] != t[j-1])
-            buf[i, j] = minimum(
+            buf[i, j] = min(
                 mpc, 
-                minimum(mpc, buf[i-1, j] +1, buf[i, j-1] + 1),
-                buf[i-1, j-1] + cost)
-    
-            if i > 1 and j > 1 and s[i-1] == t[j-1] and s[i-2] == t[j-1]:
-                buf[i,j] = minimum(mpc, buf[i,j], buf[i-2,j-2] + cost)
+                buf[i-1, j] + 1,           # Eliminazione
+                buf[i, j-1] + 1,           # Inserimento
+                buf[i-1, j-1] + cost       # Sostituzione
+            )
+            
+            if i > 1 and j > 1 and s[i-1] == t[j-2] and s[i-2] == t[j-1]:
+                buf[i, j] = min(
+                    buf[i, j],
+                    buf[i-2, j-2] + cost     # Trasposizione
+                )
 
-    return buf[n-1, m-1]
+    return buf[m, n]
+
+
 
 @sequre
 def playground(mpc, a, b, c, d, e, f, g, h):
@@ -40,20 +47,16 @@ def playground(mpc, a, b, c, d, e, f, g, h):
     # Tipi genetici nativi di Seq/Sequre
     seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
     seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
-    
-    n = len(seq_1)
-    m = len(seq_2)
 
-    d_public = [[0] * (n + 1) for _ in range(m + 1)] #matrice pubblica 
+    d_public = [[0] * (len(seq_1) + 1) for _ in range(len(seq_2) + 1)] #matrice pubblica 
     d_stensor = Stensor.enc(mpc, d_public, source_pid=0, modulus=a.modulus)
 
     #damerau-levenshtein
     dam_lev_public = damerau_levenshtein(mpc, seq_1, seq_2, d_public)  # Esecuzione offline/stile Python del metodo levenshtein
-    dam_lev_stensor = damerau_levenshtein(mpc, seq_1, seq_2, d_stensor)  # Esecuzione sicura 
+    dam_lev_stensor = damerau_levenshtein(mpc, seq_1, seq_2, d_stensor)  # Esecuzione sicura del metodo levenshtein
 
     if mpc.pid:  # I risultati in CP0 sono spesso zero, quindi non c'è bisogno di controllarli qui. Tuttavia, è necessario assicurarsi che CP0 sia incluso nei calcoli sopra (quindi se il ramo mpc.pid è impostato solo qui)
         print("Distanza di modifica (Damerau-Levenshtein pubblica): ", dam_lev_public)
         print("Distanza di modifica (Damerau-Levenshtein sicura): ", dam_lev_stensor.reveal(mpc))
 
     return a
-
