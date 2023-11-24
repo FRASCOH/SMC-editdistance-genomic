@@ -12,7 +12,7 @@ def minimum(mpc, x, y):
 
 
 @sequre  
-def wagner_fischer_cutoff(mpc, s, t, buf):
+def wagner_fischer_optimized(mpc, s, t, buf):
     n = len(s) 
     m = len(t) 
 
@@ -40,12 +40,12 @@ def playground(mpc, a, b, c, d, e, f, g, h):
     # Wagner-Fischer cut-off
     buf_public = arange(len(seq_2) + 1, dtype=int) 
     buf_stenor = Stensor.enc(mpc, buf_public, source_pid=0, modulus=a.modulus)  
-    wf_public = wagner_fischer_cutoff(mpc, seq_1, seq_2, buf_public) 
-    wf_stensor = wagner_fischer_cutoff(mpc, seq_1, seq_2, buf_stenor)  
+    wfo_public = wagner_fischer_optimized(mpc, seq_1, seq_2, buf_public) 
+    wfo_stensor = wagner_fischer_optimized(mpc, seq_1, seq_2, buf_stenor)  
 
 
     if mpc.pid: 
-        print("Distanza di modifica (Wagner-Fischer public): ", wf_public)
-        print("Distanza di modifica (Wagner-Fischer secure): ", wf_stensor.reveal(mpc))
+        print("Distanza di modifica (Wagner-Fischer ottimizzato pubblico): ", wfo_public)
+        print("Distanza di modifica (Wagner-Fischer ottimizzato sicuro): ", wfo_stensor.reveal(mpc))
 
     return a
