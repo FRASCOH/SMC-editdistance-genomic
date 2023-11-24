@@ -74,7 +74,7 @@ def playground(mpc, a, b, c, d, e, f, g, h):
     gu_stensor = edit_distance_generalized_threshold(mpc, seq_1, seq_2, row_stenor)
 
     if mpc.pid:  # Results at CP0 are often zero so no need to check them here. However, we need to make sure that CP0 is inlcuded in computation above (thus if mpc.pid branch is set only here)
-        print("Distanza di modifica (Generalized public): ", gu_public)
-        print("Distanza di modifica (Generalized secure): ", gu_stensor.reveal(mpc))
+        print("Distanza di modifica (Distanza di modifica di ukkonen generalizzato pubblica): ", gu_public)
+        print("Distanza di modifica (Distanza di modifica di ukkonen generalizzato sicura): ", gu_stensor.reveal(mpc))
 
     return a
