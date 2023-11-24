@@ -9,9 +9,9 @@ def minimum(mpc, x, y):
     mask = ((y - x) > 0).astype(int)
     return x * mask - y * (mask - 1)
 
-#Levenshtein
+#Wagner Fisher
 @sequre
-def levenshtei(mpc, s, t, buf):
+def wagner_fisher(mpc, s, t, buf):
     n = len(s)
     m = len(t)
 
@@ -45,13 +45,13 @@ def playground(mpc, a, b, c, d, e, f, g, h):
     d_public = [[0] * (n + 1) for _ in range(m + 1)] #matrice pubblica 
     d_stensor = Stensor.enc(mpc, d_public, source_pid=0, modulus=a.modulus)
 
-    #levenshtein
-    lev_public = levenshtein(mpc, seq_1, seq_2, d_public)  # Esecuzione offline/stile Python del metodo levenshtein
-    lev_stensor = levenshtein(mpc, seq_1, seq_2, d_stensor)  # Esecuzione sicura del metodo levenshtein
+    #Wagner Fisher
+    wf_public = wagner_fisher(mpc, seq_1, seq_2, d_public)  # Esecuzione offline/stile Python del metodo levenshtein
+    wf_stensor = wagner_fisher(mpc, seq_1, seq_2, d_stensor)  # Esecuzione sicura del metodo levenshtein
 
     if mpc.pid:  # I risultati in CP0 sono spesso zero, quindi non c'è bisogno di controllarli qui. Tuttavia, è necessario assicurarsi che CP0 sia incluso nei calcoli sopra (quindi se il ramo mpc.pid è impostato solo qui)
-        print("Distanza di modifica (Levenshtein pubblica): ", lev_public)
-        print("Distanza di modifica (Levenshtein sicura): ", lev_stensor.reveal(mpc))
+        print("Distanza di modifica (Distanza di modifica di Wagner Fisher pubblica): ", wf_public)
+        print("Distanza di modifica (Distanza di modifica di Wagner Fisher sicura): ", wf_stensor.reveal(mpc))
 
     return a
 
