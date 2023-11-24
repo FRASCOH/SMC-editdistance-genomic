@@ -11,7 +11,7 @@ def minimum(mpc, x, y):
 
 #Levenshtein
 @sequre
-def levenshtein(mpc, s, t, buf):
+def levenshtei(mpc, s, t, buf):
     n = len(s)
     m = len(t)
 
