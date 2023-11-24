@@ -74,7 +74,7 @@ def playground(mpc, a, b, c, d, e, f, g, h):
     edt_stensor_revealed = edit_distance_threshold(mpc, seq_1, seq_2, 30, p_stenor, d_stenor)
 
     if mpc.pid: 
-        print("Distanza di modifica (Edit distance threshold public): ", edt_public)
-        print("Distanza di modifica (Edit distance threshold secure): ", edt_stensor_revealed)
+        print("Distanza di modifica (Distanza di modifica di Ukkonen pubblica): ", edt_public)
+        print("Distanza di modifica (Distanza di modifica di Ukkonen sicura): ", edt_stensor_revealed)
 
     return a
