@@ -5,6 +5,7 @@ from numpy.create import zeros
 from sequre import sequre, local
 from sequre.types.sharetensor import Sharetensor as Stensor
 
+INF_VAL: int = 1 << 16
 
 @sequre
 def minimum(mpc, x, y):
