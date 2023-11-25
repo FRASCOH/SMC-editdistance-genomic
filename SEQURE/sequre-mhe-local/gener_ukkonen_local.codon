@@ -70,7 +70,7 @@ def local_wrapper(mpc):
     seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
 
     row_public = zeros(len(seq_2) + 1, dtype=int)
-    row_stenor = Stensor.enc(mpc, row_public, source_pid=0, modulus=a.modulus)
+    row_stensor = Stensor.enc(mpc, row_public)
 
     #Generalized Ukkonen
     s = time.time()
@@ -79,7 +79,7 @@ def local_wrapper(mpc):
     gu_public_time = e - s
 
     s = time.time()
-    gu_stensor = gen_ukkonen(mpc, seq_1, seq_2, row_stenor)  # Esecuzione sicura del metodo levenshtein
+    gu_stensor = gen_ukkonen(mpc, seq_1, seq_2, row_stensor)  # Esecuzione sicura del metodo levenshtein
     e = time.time()
     gu_stensor_time = e - s
 
