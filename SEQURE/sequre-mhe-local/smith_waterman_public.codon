@@ -1,0 +1,22 @@
+import time
+from numpy.create import zeros
+from sequre import sequre, local
+from sequre.types.sharetensor import Sharetensor as Stensor
+
+@local
+def local_wrapper(mpc):
+    # Tipi genetici nativi di Seq/Sequre
+    seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
+    seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
+
+    #smith-waterman
+    s = time.time()
+    sw_public = seq_aln = seq_1 @ seq_2
+    e = time.time()
+    sw_public_time = e - s
+
+
+    if mpc.pid:  # I risultati in CP0 sono spesso zero, quindi non c'è bisogno di controllarli qui. Tuttavia, è necessario assicurarsi che CP0 sia incluso nei calcoli sopra (quindi se il ramo mpc.pid è impostato solo qui)
+        print(f"Punteggio di allinemaneto e distanza di modifica (Smith Waterman pubblica): {sw_public} done in {sw_public_time}s")
+
+local_wrapper()
