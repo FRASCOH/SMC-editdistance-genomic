@@ -69,9 +69,9 @@ def local_wrapper(mpc):
     seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
 
     p_public = zeros(len(seq_2) + 1, dtype=int)
-    p_stensor = Stensor.enc(mpc, p_public, source_pid=0, modulus=a.modulus)
+    p_stensor = Stensor.enc(mpc, p_public)
     d_public = zeros(len(seq_2) + 1, dtype=int) + INF_VAL
-    d_stensor = Stensor.enc(mpc, d_public, source_pid=0, modulus=a.modulus)
+    d_stensor = Stensor.enc(mpc, d_public)
 
     # Aggiunto il passaggio del parametro threshold da input di linea di comando
     threshold = int(sys.argv[1]) if len(sys.argv) > 1 else 30
