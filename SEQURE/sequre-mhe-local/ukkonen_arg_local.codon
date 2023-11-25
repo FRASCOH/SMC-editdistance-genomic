@@ -1,0 +1,93 @@
+import sys
+import time
+
+from numpy.create import zeros
+
+from sequre import sequre, local
+from sequre.types.sharetensor import Sharetensor as Stensor
+
+
+@sequre
+def minimum(mpc, x, y):
+    mask = ((y - x) > 0).astype(int)
+    return x * mask - y * (mask - 1)
+
+
+# Ukkonen
+@sequre
+def edit_distance_threshold(mpc, s1, s2, threshold, p, d):  # Aggiunto threshold come parametro
+    s1len = len(s1)
+    s2len = len(s2)
+
+    if threshold == -1:
+        threshold = INF_VAL
+
+    i, row, col = 0, 0, 0
+    min_val, max_val = 0, 0
+    boundary = min(s2len, threshold) + 1
+
+    for i in range(boundary):
+        p[i] = p[i] + i  # Assuming p is initialized to zeros
+
+    for i in range(i, s2len + 1):
+        p[i] = p[i] + INF_VAL  # Secure inf is not supported yet. I should add support for this, thanks!
+
+    for row in range(1, s1len + 1):
+        d[0] = d[0] * 0 + row  # Hack
+
+        min_val = min(1, row - threshold)
+        max_val = min(s2len, row + threshold)
+
+        if min_val > max_val:
+            return -1
+
+        if min_val > 1:
+            d[min_val - 1] = d[min_val - 1] * 0 + INF_VAL
+
+        for col in range(min_val, max_val + 1):
+            if s1[row - 1] == s2[col - 1]:
+                d[col] = p[col - 1]
+            else:
+                d[col] = minimum(mpc, p[col - 1], minimum(mpc, d[col - 1], p[col])) + 1
+
+        p, d = d, p
+
+    result = int(p[s2len].reveal(mpc))
+
+    if result <= threshold:
+        return result
+    else:
+        return -1
+
+
+@local
+def local_wrapper(mpc):
+    # Tipi genetici nativi di Seq/Sequre
+    seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
+    seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
+
+    p_public = zeros(len(seq_2) + 1, dtype=int)
+    p_stensor = Stensor.enc(mpc, p_public, source_pid=0, modulus=a.modulus)
+    d_public = zeros(len(seq_2) + 1, dtype=int) + INF_VAL
+    d_stensor = Stensor.enc(mpc, d_public, source_pid=0, modulus=a.modulus)
+
+    # Aggiunto il passaggio del parametro threshold da input di linea di comando
+    threshold = int(sys.argv[1]) if len(sys.argv) > 1 else 30
+
+    # Ukkonen
+    s = time.time()
+    uk_public = edit_distance_threshold(mpc, seq_1, seq_2, threshold, p_public, d_public)
+    e = time.time()
+    uk_public_time = e - s
+
+    s = time.time()
+    uk_stensor = edit_distance_threshold(mpc, seq_1, seq_2, threshold, p_stensor, d_stensor)
+    e = time.time()
+    uk_stensor_time = e - s
+
+    if mpc.pid:
+        print(f"Distanza di modifica (Ukkonen pubblica, soglia {threshold}): {uk_public} done in {uk_public_time}s")
+        print(f"Distanza di modifica (Ukkonen sicura, soglia {threshold}): {uk_stensor.reveal(mpc)} done in {uk_stensor_time}s")
+
+
+local_wrapper()
