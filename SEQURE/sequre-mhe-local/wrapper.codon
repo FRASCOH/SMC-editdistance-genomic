@@ -1,102 +1,529 @@
 import time, sys
 
+
+
 from numpy.create import zeros
 
-from sequre import local, Sharetensor as Stensor
 
-from damerau_lev import damerau_levenshtein
-from gener_ukkonen import gen_ukkonen
-from levensthein import levenshtein
-from ukkonen_arg import edit_distance_threshold, INF_VAL
+
+from sequre import sequre, local, Sharetensor as Stensor
+
+
+
+#from damerau_lev import damerau_levenshtein
+
+#from gener_ukkonen import gen_ukkonen
+
+#from levensthein import levenshtein
+
+#from ukkonen_arg import edit_distance_threshold, INF_VAL
+
+
+
+INF_VAL: int = 1 << 16
+
+
+
+
+
+@sequre
+
+def minimum(mpc, x, y):
+
+    mask = ((y - x) > 0).astype(int)
+
+    return x * mask - y * (mask - 1)
+
+
+
+@sequre
+
+def levenshtein(mpc, s, t, buf):
+
+    n = len(s)
+
+    m = len(t)
+
+
+
+    for i in range(1, m + 1):
+
+        buf[i, 0] = buf[i, 0] * 0 + i
+
+    
+
+    for j in range(1, n + 1):
+
+        buf[0, j] = buf[0, j] * 0 + j
+
+
+
+
+
+    for j in range(1, n + 1):
+
+        for i in range(1, m + 1):
+
+            cost = int(s[i-1] != t[j-1])
+
+            buf[i, j] = minimum(
+
+                mpc, 
+
+                minimum(mpc, buf[i-1, j] +1, buf[i, j-1] + 1),
+
+                buf[i-1, j-1] + cost)
+
+
+
+    return buf[m, n]
+
+
+
+
+
+#Damerau-Levenshtein
+
+@sequre
+
+def damerau_levenshtein(mpc, s, t, buf):
+
+    n = len(s)
+
+    m = len(t)
+
+
+
+    for i in range(1, m + 1):
+
+        buf[i, 0] = buf[i, 0] * 0 + i
+
+    
+
+    for j in range(1, n + 1):
+
+        buf[0, j] = buf[0, j] * 0 + j
+
+
+
+    for j in range(1, n + 1):
+
+        for i in range(1, m + 1):
+
+            cost = int(s[i-1] != t[j-1])
+
+            buf[i, j] = minimum(
+
+                mpc, 
+
+                buf[i-1, j] + 1,           # Eliminazione
+
+                minimum(
+
+                    mpc,
+
+                    buf[i, j-1] + 1,           # Inserimento
+
+                    buf[i-1, j-1] + cost       # Sostituzione
+
+                )
+
+            )
+
+            
+
+            if i > 1 and j > 1 and s[i-1] == t[j-2] and s[i-2] == t[j-1]:
+
+                buf[i, j] = minimum(
+
+                    mpc,
+
+                    buf[i, j],
+
+                    buf[i-2, j-2] + cost     # Trasposizione
+
+                )
+
+
+
+    return buf[m, n]
+
+
+
+# Ukkonen
+
+@sequre
+
+def edit_distance_threshold(mpc, s1, s2, threshold, p, d):  # Aggiunto threshold come parametro
+
+    s1len = len(s1)
+
+    s2len = len(s2)
+
+
+
+    if threshold == -1:
+
+        threshold = INF_VAL
+
+
+
+    i, row, col = 0, 0, 0
+
+    min_val, max_val = 0, 0
+
+    boundary = min(s2len, threshold) + 1
+
+
+
+    for i in range(boundary):
+
+        p[i] = p[i] + i  # Assuming p is initialized to zeros
+
+
+
+    for i in range(i, s2len + 1):
+
+        p[i] = p[i] + INF_VAL  # Secure inf is not supported yet. I should add support for this, thanks!
+
+
+
+    for row in range(1, s1len + 1):
+
+        d[0] = d[0] * 0 + row  # Hack
+
+
+
+        min_val = min(1, row - threshold)
+
+        max_val = min(s2len, row + threshold)
+
+
+
+        if min_val > max_val:
+
+            return -1
+
+
+
+        if min_val > 1:
+
+            d[min_val - 1] = d[min_val - 1] * 0 + INF_VAL
+
+
+
+        for col in range(min_val, max_val + 1):
+
+            if s1[row - 1] == s2[col - 1]:
+
+                d[col] = p[col - 1]
+
+            else:
+
+                d[col] = minimum(mpc, p[col - 1], minimum(mpc, d[col - 1], p[col])) + 1
+
+
+
+        p, d = d, p
+
+
+
+    result = int(p[s2len].reveal(mpc))
+
+
+
+    if result <= threshold:
+
+        return result
+
+    else:
+
+        return -1
+
+
+
+
+
+@sequre
+
+def gen_ukkonen(mpc, s1, s2, row):
+
+    s1len = len(s1)
+
+    s2len = len(s2)
+
+    gmax = (s2len - 1) // 2
+
+    gmin = 1 - gmax - (s1len - s2len)
+
+
+
+    for j in range(gmax + 1):
+
+        row[j] = row[j] + j  # Sequre public setter is not possible yet. This is a bypass.
+
+
+
+    for i in range(1, s1len + 1):
+
+        row[0] = row[0] * 0 + (i - 1)  # Sequre public setter is not possible yet. This is a bypass.
+
+
+
+        # Regular python code below
+
+        gmin += 1
+
+        gmax += 1
+
+        min_val = max(gmin, 1)
+
+        max_val = min(gmax, s2len)
+
+        
+
+        # Sequre code for indexing below
+
+        dia = row[min_val - 1]
+
+        top = row[min_val]
+
+
+
+        if s1[i - 1] != s2[min_val - 1]:
+
+            dia = minimum(mpc, dia, top) + 1  # Sequre minimum computing and Sequre public addition
+
+
+
+        row[min_val] = dia  # It is ok to use Sequre setter between two Stensors
+
+        left = dia
+
+        dia = top
+
+
+
+        for j in range(min_val + 1, max_val + 1):
+
+            top = row[j]
+
+
+
+            if s1[i - 1] != s2[j - 1]:
+
+                dia = minimum(mpc, dia, minimum(mpc, top, left)) + 1
+
+
+
+            row[j] = dia
+
+            left = dia
+
+            dia = top
+
+
+
+        if s2len == max_val:
+
+            continue
+
+
+
+        if s1[i - 1] != s2[max_val]:
+
+            dia = minimum(mpc, dia, left) + 1
+
+
+
+        row[max_val + 1] = dia
+
+
+
+    dia = row[s2len]
+
+    return dia
+
+
+
 
 
 @local
+
 def local_wrapper(mpc, seq_1, seq_2, threshold):
+
     #damerau-levenshtein
+
     d_public = zeros((len(seq_2) + 1, len(seq_1) + 1), dtype=int)
+
     d_stensor = Stensor.enc(mpc, d_public)
 
+
+
     s = time.time()
+
     dam_lev_public = damerau_levenshtein(mpc, seq_1, seq_2, d_public)  # Esecuzione offline/stile Python del metodo levenshtein
+
     e = time.time()
+
     dam_lev_public_time = e - s
 
+
+
     s = time.time()
+
     dam_lev_stensor = damerau_levenshtein(mpc, seq_1, seq_2, d_stensor)  # Esecuzione sicura del metodo levenshtein
+
     e = time.time()
+
     dam_lev_stensor_time = e - s
 
+
+
     if mpc.pid:  # I risultati in CP0 sono spesso zero, quindi non c'è bisogno di controllarli qui. Tuttavia, è necessario assicurarsi che CP0 sia incluso nei calcoli sopra (quindi se il ramo mpc.pid è impostato solo qui)
+
         print(f"Distanza di modifica (Damerau-Levenshtein pubblica): {dam_lev_public} done in {dam_lev_public_time}s")
+
         print(f"Distanza di modifica (Damerau-Levenshtein sicura): {dam_lev_stensor.reveal(mpc)} done in {dam_lev_stensor_time}s")
+
    
+
     #Generalized Ukkonen
+
     row_public = zeros(len(seq_2) + 1, dtype=int)
+
     row_stensor = Stensor.enc(mpc, row_public)
 
+
+
     s = time.time()
+
     gu_public = gen_ukkonen(mpc, seq_1, seq_2, row_public)  # Esecuzione offline/stile Python del metodo levenshtein
+
     e = time.time()
+
     gu_public_time = e - s
 
+
+
     s = time.time()
+
     gu_stensor = gen_ukkonen(mpc, seq_1, seq_2, row_stensor)  # Esecuzione sicura del metodo levenshtein
+
     e = time.time()
+
     gu_stensor_time = e - s
 
+
+
     if mpc.pid:  # I risultati in CP0 sono spesso zero, quindi non c'è bisogno di controllarli qui. Tuttavia, è necessario assicurarsi che CP0 sia incluso nei calcoli sopra (quindi se il ramo mpc.pid è impostato solo qui)
+
         print(f"Distanza di modifica (Generalized Ukkonen pubblica): {gu_public} done in {gu_public_time}s")
+
         print(f"Distanza di modifica (Generalized Ukkonen sicura): {gu_stensor.reveal(mpc)} done in {gu_stensor_time}s")
 
+
+
     #levenshtein
+
     d_public = zeros((len(seq_2) + 1, len(seq_1) + 1), dtype=int)
+
     d_stensor = Stensor.enc(mpc, d_public)
 
+
+
     s = time.time()
+
     lev_public = levenshtein(mpc, seq_1, seq_2, d_public)  # Esecuzione offline/stile Python del metodo levenshtein
+
     e = time.time()
+
     lev_public_time = e - s
 
+
+
     s = time.time()
+
     lev_stensor = levenshtein(mpc, seq_1, seq_2, d_stensor)  # Esecuzione sicura del metodo levenshtein
+
     e = time.time()
+
     lev_stensor_time = e - s
 
+
+
     if mpc.pid:  # I risultati in CP0 sono spesso zero, quindi non c'è bisogno di controllarli qui. Tuttavia, è necessario assicurarsi che CP0 sia incluso nei calcoli sopra (quindi se il ramo mpc.pid è impostato solo qui)
+
         print(f"Distanza di modifica (Levenshtein pubblica): {lev_public} done in {lev_public_time}s")
+
         print(f"Distanza di modifica (Levenshtein sicura): {lev_stensor.reveal(mpc)} done in {lev_stensor_time}s")
+
    
+
     # Ukkonen
+
     p_public = zeros(len(seq_2) + 1, dtype=int)
+
     p_stensor = Stensor.enc(mpc, p_public)
+
     d_public = zeros(len(seq_2) + 1, dtype=int) + INF_VAL
+
     d_stensor = Stensor.enc(mpc, d_public)
 
+
+
     s = time.time()
+
     uk_public = edit_distance_threshold(mpc, seq_1, seq_2, threshold, p_public, d_public)
+
     e = time.time()
+
     uk_public_time = e - s
 
+
+
     s = time.time()
+
     uk_stensor = edit_distance_threshold(mpc, seq_1, seq_2, threshold, p_stensor, d_stensor)
+
     e = time.time()
+
     uk_stensor_time = e - s
 
+
+
     if mpc.pid:
+
         print(f"Distanza di modifica (Ukkonen pubblica, soglia {threshold}): {uk_public} done in {uk_public_time}s")
+
         print(f"Distanza di modifica (Ukkonen sicura, soglia {threshold}): {uk_stensor.reveal(mpc)} done in {uk_stensor_time}s")
 
 
+
+
+
 # Aggiunto il passaggio del parametro threshold (e il percorso del file di input) da input di linea di comando
+
 args = [arg for arg in sys.argv[1:] if not arg.startswith("--")]
+
 path = args[0]
+
 threshold = int(args[-1]) if len(args) > 1 else 30
 
+
+
 with open(path) as f:
+
     lines = f.readlines()
+
     # Tipi genetici nativi di Seq/Sequre
+
     from bio.seq import seq
+
     seq_1 = seq(lines[0].strip())
+
     seq_2 = seq(lines[1].strip())
+
+
 
 local_wrapper(seq_1, seq_2, threshold)
