@@ -34,8 +34,11 @@ def gen_ukkonen(mpc, s1, s2, row):
         dia = row[min_val - 1]
         top = row[min_val]
 
-        if s1[i - 1] != s2[min_val - 1]:
-            dia = minimum(mpc, dia, top) + 1  # Sequre minimum computing and Sequre public addition
+        check1 = (s1[i - 1] != s2[min_val - 1]).astype(int)
+        dia = (minimum(mpc, dia, top) + 1) * check1
+
+        #if s1[i - 1] != s2[min_val - 1]:
+            #dia = minimum(mpc, dia, top) + 1  # Sequre minimum computing and Sequre public addition
 
         row[min_val] = dia  # It is ok to use Sequre setter between two Stensors
         left = dia
@@ -43,9 +46,11 @@ def gen_ukkonen(mpc, s1, s2, row):
 
         for j in range(min_val + 1, max_val + 1):
             top = row[j]
-
-            if s1[i - 1] != s2[j - 1]:
-                dia = minimum(mpc, dia, minimum(mpc, top, left)) + 1
+            check2 = (s1[i - 1] != s2[j - 1]).astype(int)
+            dia = (minimum(mpc, dia, minimum(mpc, top, left)) + 1) * check2
+            
+            #if s1[i - 1] != s2[j - 1]:
+                #dia = minimum(mpc, dia, minimum(mpc, top, left)) + 1
 
             row[j] = dia
             left = dia
@@ -54,8 +59,11 @@ def gen_ukkonen(mpc, s1, s2, row):
         if s2len == max_val:
             continue
 
-        if s1[i - 1] != s2[max_val]:
-            dia = minimum(mpc, dia, left) + 1
+        check3 = (s1[i - 1] != s2[j - 1]).astype(int)
+            dia = (minimum(mpc, dia, left) + 1) * check3
+
+        #if s1[i - 1] != s2[max_val]:
+            #dia = minimum(mpc, dia, left) + 1
 
         row[max_val + 1] = dia
 
@@ -69,6 +77,9 @@ def local_wrapper(mpc):
     seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
     seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
 
+    seq_1_enc = Stensor.enc(mpc, [int(nucleotide) for nucleotide in seq_1])
+    seq_2_enc = Stensor.enc(mpc, [int(nucleotide) for nucleotide in seq_2))
+
     row_public = zeros(len(seq_2) + 1, dtype=int)
     row_stensor = Stensor.enc(mpc, row_public)
 
@@ -79,7 +90,7 @@ def local_wrapper(mpc):
     gu_public_time = e - s
 
     s = time.time()
-    gu_stensor = gen_ukkonen(mpc, seq_1, seq_2, row_stensor)  # Esecuzione sicura del metodo levenshtein
+    gu_stensor = gen_ukkonen(mpc, seq_1_enc, seq_2_enc, row_stensor)  # Esecuzione sicura del metodo levenshtein
     e = time.time()
     gu_stensor_time = e - s
 
