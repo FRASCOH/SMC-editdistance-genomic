@@ -71,6 +71,9 @@ def local_wrapper(mpc):
     # Tipi genetici nativi di Seq/Sequre
     seq_1 = s'gtcccacacggcaattgttaagctgcatatgcgaaggagaggacgtgcgc'
     seq_2 = s'aaatctcttccgtaagctgtcttgaggtacttggattggaagcagcccgg'
+    
+    seq_1_enc = Stensor.enc(mpc, [int(nucleotide) for nucleotide in seq_1])
+    seq_2_enc = Stensor.enc(mpc, [int(nucleotide) for nucleotide in seq_2])
 
     p_public = zeros(len(seq_2) + 1, dtype=int)
     p_stensor = Stensor.enc(mpc, p_public)
@@ -82,12 +85,12 @@ def local_wrapper(mpc):
 
     # Ukkonen
     s = time.time()
-    uk_public = edit_distance_threshold(mpc, seq_1, seq_2, threshold, p_public, d_public)
+    uk_public = edit_distance_threshold(mpc, seq_1_enc, seq_2_enc, threshold, p_public, d_public)
     e = time.time()
     uk_public_time = e - s
 
     s = time.time()
-    uk_stensor = edit_distance_threshold(mpc, seq_1, seq_2, threshold, p_stensor, d_stensor)
+    uk_stensor = edit_distance_threshold(mpc, seq_1_enc, seq_2_enc, threshold, p_stensor, d_stensor)
     e = time.time()
     uk_stensor_time = e - s
 
