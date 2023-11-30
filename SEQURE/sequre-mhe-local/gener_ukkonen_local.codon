@@ -10,7 +10,7 @@ def minimum(mpc, x, y):
     return x * mask - y * (mask - 1)
 
 
-#Levenshtein
+#Generalized Ukkonen
 @sequre
 def gen_ukkonen(mpc, s1, s2, row):
     s1len = len(s1)
